@@ -1,0 +1,31 @@
+#!/usr/bin/python3
+# -*- coding: utf-8 -*-
+
+import os
+import sys
+
+current_directory = os.path.realpath(os.path.abspath(os.path.join(
+    os.path.normpath(os.getcwd()))))
+
+root_folder = os.path.realpath(os.path.abspath(os.path.join(
+    os.path.normpath("{full_path_to_app_folder}"))))
+
+
+def list_has_arg(args_list, arg):
+    for a in args_list:
+        if a.startswith(arg):
+            return True
+
+        continue
+
+    return False
+
+
+if __name__ == "__main__":
+    args = sys.argv[1:]
+
+    if ("-p" not in args and not list_has_arg(args, "--path=")) and ("del" in args or "edit" in args):
+        args.append("--path=%s" % current_directory)
+
+    os.chdir(root_folder)
+    os.execv("%s/app.py" % root_folder, [" "] + args)
