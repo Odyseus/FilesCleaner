@@ -4,7 +4,7 @@
 # https://unix.stackexchange.com/a/55622
 
 _have {executable_name} &&
-_decide_nospace(){
+_decide_nospace_{current_date}(){
     if [[ ${1} == "--"*"=" ]] ; then
         compopt -o nospace
     fi
@@ -48,7 +48,7 @@ __files_cleaner_app_{current_date}(){
     case $cmd in
     "del")
         COMPREPLY=( $(compgen -W "-p --path= -n --negated -g --glob" -- "${cur}") )
-        _decide_nospace ${COMPREPLY[0]}
+        _decide_nospace_{current_date} ${COMPREPLY[0]}
         ;;
     "edit")
         COMPREPLY=( $(compgen -W "-l --line-endings" -- "${cur}") )
