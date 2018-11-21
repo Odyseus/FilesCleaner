@@ -149,13 +149,13 @@ class FilesCleaner(object):
                 question = "\n%s '%s' (y/n/q)? " % (self.messages[func.__name__][0], target)
                 answer = readchar(question)
 
-                if answer in ["y", "Y"]:
+                if answer in {"y", "Y"}:
                     try:
                         func(target)
                         i += 1
                     except Exception as err:
                         errors.append((func.__name__, target, str(err)))
-                elif answer in ["q"]:  # i.e. quit
+                elif answer in {"q"}:  # i.e. quit
                     break
                 else:
                     continue
@@ -250,9 +250,9 @@ class FilesCleaner(object):
             answer = readchar(question)
             self.targets = results
 
-            if answer in ['y', 'Y']:
+            if answer in {"y", "Y"}:
                 self._apply(func)
-            elif answer in ['c', 'C']:
+            elif answer in {"c", "C"}:
                 self._apply(func, confirm=True)
             else:
                 self.logger.warning("Action cancelled.", date=False)
