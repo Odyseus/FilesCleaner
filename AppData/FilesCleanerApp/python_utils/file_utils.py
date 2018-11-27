@@ -426,5 +426,17 @@ def custom_copytree(src, dst, symlinks=True, ignored_patterns=None, ignore_dangl
     return dst
 
 
+def get_folder_size(dir_path):
+    total = 0
+
+    for entry in os.scandir(dir_path):
+        if entry.is_file() and not entry.is_symlink():
+            total += entry.stat().st_size
+        elif entry.is_dir() and not entry.is_symlink():
+            total += get_folder_size(entry.path)
+
+    return total
+
+
 if __name__ == "__main__":
     pass

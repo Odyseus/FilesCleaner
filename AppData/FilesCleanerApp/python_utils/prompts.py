@@ -2,6 +2,10 @@
 # -*- coding: utf-8 -*-
 """CLI prompts and confirmation "dialogs" utilities.
 """
+import sys
+import termios
+import tty
+
 from . import exceptions
 from .ansi_colors import Ansi
 
@@ -213,6 +217,34 @@ def do_prompt(d, key, text, default=None, validator=nonempty):
         raise exceptions.KeyboardInterruption()
     else:
         d[key] = x
+
+
+def read_char(txt):
+    """Read character.
+
+    Read single characters from standard input.
+
+    Parameters
+    ----------
+    txt : str
+        Message to display.
+
+    Returns
+    -------
+    str
+        The read character.
+    """
+    print(Ansi.INFO(txt))
+    fd = sys.stdin.fileno()
+    old_settings = termios.tcgetattr(fd)
+
+    try:
+        tty.setraw(sys.stdin.fileno())
+        ch = sys.stdin.read(1)
+    finally:
+        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
+
+    return ch
 
 
 if __name__ == "__main__":
