@@ -27,7 +27,7 @@ class LogSystem():
     """
 
     def __init__(self, filename="log.log", verbose=False):
-        """
+        """Initialization.
         Parameters
         ----------
         filename : str, optional

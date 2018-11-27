@@ -28,7 +28,7 @@ class CommandLineInterfaceSuper():
     _cli_header_blacklist = []
 
     def __init__(self, app_name, logs_storage_dir):
-        """Initialize.
+        """Initialization.
 
         Parameters
         ----------
