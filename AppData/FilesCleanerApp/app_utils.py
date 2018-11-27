@@ -10,13 +10,11 @@ root_folder : str
 """
 
 import os
-import sys
-import termios
-import tty
 
 from fnmatch import fnmatch
 from shutil import rmtree
 
+from .python_utils import prompts
 from .python_utils.ansi_colors import Ansi
 
 
@@ -24,39 +22,8 @@ root_folder = os.path.realpath(os.path.abspath(os.path.join(
     os.path.normpath(os.getcwd()))))
 
 
-def readchar(txt):
-    """Read character.
-
-    Read single characters from standard input.
-
-    Parameters
-    ----------
-    txt : str
-        Message to display.
-
-    Returns
-    -------
-    str
-        The read character.
-    """
-    print(Ansi.PURPLE(txt))
-    # print(txt, end=' ')
-    fd = sys.stdin.fileno()
-    old_settings = termios.tcgetattr(fd)
-
-    try:
-        tty.setraw(sys.stdin.fileno())
-        ch = sys.stdin.read(1)
-    finally:
-        termios.tcsetattr(fd, termios.TCSADRAIN, old_settings)
-
-    return ch
-
-
 class FilesCleaner(object):
     """Recursively cleans patterns of files/directories.
-
-    Based on a recipe from `ActiveState <http://code.activestate.com/recipes/576643/>`__
 
     Attributes
     ----------
@@ -71,14 +38,12 @@ class FilesCleaner(object):
         one of the specified patterns, returning False otherwise.
     messages : dict
         Storage for messages used by the actions.
-    negate : bool
-        If True, treat the patterns passed as non inclusive.
-    path : str
-        The path to work on.
-    patterns : list
-        The patterns to work with.
     targets : list
         The list of files/folders on which to perform actions.
+
+    Note
+    ----
+    Based on: `a recipe from ActiveState <http://code.activestate.com/recipes/576643/>`__
     """
 
     def __init__(self, path, patterns, negate, logger):
@@ -95,9 +60,9 @@ class FilesCleaner(object):
         logger : object
             See <class :any:`LogSystem`>.
         """
-        self.path = path
-        self.patterns = patterns
-        self.negate = negate
+        self._path = path
+        self._patterns = patterns
+        self._negate = negate
         self.logger = logger
 
         self.matchers = {
@@ -116,7 +81,8 @@ class FilesCleaner(object):
         self.messages = {
             # "function_name": ("Question?", "Info completed")
             "_delete": ("Delete files/folders", "Deleted"),
-            "_clean_endings": ("Convert all Windows endings into Unix endings", "Line endings cleaned for"),
+            "_clean_endings": ("Convert all Windows endings into Unix endings",
+                               "Line endings cleaned for"),
         }
         self.targets = []
         self.cum_size = 0.0
@@ -129,7 +95,8 @@ class FilesCleaner(object):
         str
             Printable representation of self.
         """
-        return "<FilesCleaner: path:%s, negated:%s, patterns:%s>" % (self.path, self.negate, self.patterns)
+        return "<FilesCleaner: path:%s, negated:%s, patterns:%s>" % (
+            self._path, self._negate, self._patterns)
 
     def _apply(self, func, confirm=False):
         """Applies a function to each target path
@@ -143,21 +110,28 @@ class FilesCleaner(object):
         """
         i = 0
         errors = []
+        question = "\n{message} '{path}' \n{prompt} "
 
         for target in self.targets:
             if confirm:
-                question = "\n%s '%s' (y/n/q)? " % (self.messages[func.__name__][0], target)
-                answer = readchar(question)
+                answer = prompts.read_char(question.format(
+                    message=self.messages[func.__name__][0],
+                    path=target,
+                    prompt=Ansi.WARNING(
+                        # Clean string:
+                        # "(Yes/No/Abort)?"
+                        "(\033[4mY\033[24mes/\033[4mN\033[24mo/\033[4mA\033[24mbort)?")
+                ))
 
-                if answer in {"y", "Y"}:
+                if answer in {"y", "Y"}:  # i.e., Yes
                     try:
                         func(target)
                         i += 1
                     except Exception as err:
                         errors.append((func.__name__, target, str(err)))
-                elif answer in {"q"}:  # i.e. quit
+                elif answer in {"a", "A"}:  # i.e., Abort
                     break
-                else:
+                else:  # i.e., No
                     continue
             else:
                 try:
@@ -168,7 +142,8 @@ class FilesCleaner(object):
 
         if i:
             self.logger.info("%s %s items (%sK)" % (
-                self.messages[func.__name__][1], i, int(round(self.cum_size / 1024.0, 0))), date=False)
+                self.messages[func.__name__][1], i, int(round(self.cum_size / 1024.0, 0))
+            ), date=False)
         else:
             self.logger.info("No action taken", date=False)
 
@@ -221,7 +196,7 @@ class FilesCleaner(object):
         action : str
             The action to perform.
         """
-        self.logger.info("Working inside directory:\n%s" % self.path, date=False)
+        self.logger.info("Working inside directory:\n%s" % self._path, date=False)
         func, matcher = self.actions[action]
 
         def show(path):
@@ -237,17 +212,24 @@ class FilesCleaner(object):
             bool
                 If the path should be shown of not.
             """
-            if self.negate:
+            if self._negate:
                 return path if not self.matchers[matcher](path) else None
             else:
                 return path if self.matchers[matcher](path) else None
 
-        results = self._walk(self.path, show)
+        results = self._walk(self._path, show)
 
         if results:
-            question = "%s item(s) found. %s (y/n/c)? " % (
-                len(results), self.messages[func.__name__][0])
-            answer = readchar(question)
+            question = "{results} item(s) found. {message} {prompt} "
+
+            answer = prompts.read_char(question.format(
+                results=len(results),
+                message=self.messages[func.__name__][0],
+                prompt=Ansi.WARNING(
+                    # Clean string:
+                    # "(Yes/No/Confirm)?"
+                    "(\033[4mY\033[24mes/\033[4mN\033[24mo/\033[4mC\033[24monfirm)?")
+            ))
             self.targets = results
 
             if answer in {"y", "Y"}:
@@ -277,7 +259,7 @@ class FilesCleaner(object):
         results = []
 
         def visit(root, target, prefix):
-            """Summary
+            """Visit path.
 
             Parameters
             ----------
@@ -295,8 +277,9 @@ class FilesCleaner(object):
                 if obj:
                     results.append(obj)
                     self.cum_size += os.path.getsize(obj)
+
                     self.logger.info("%s %s" %
-                                     (prefix, os.path.relpath(obj, self.path)), date=False)
+                                     (prefix, os.path.relpath(obj, self._path)), date=False)
 
         for root, dirs, files in os.walk(path):
             visit(root, dirs, "+-->")
@@ -314,8 +297,7 @@ class FilesCleaner(object):
         """
         if os.path.isfile(path):
             os.remove(path)
-
-        if os.path.isdir(path):
+        elif os.path.isdir(path):
             rmtree(path, onerror=self._onerror)
 
     def _clean_endings(self, path):

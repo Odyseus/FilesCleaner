@@ -53,7 +53,8 @@ Options:
     Show application version.
 
 -p <path>, --path=<path>
-    Working directory.
+    Working directory. If not specified, the current working directory
+    will be used.
 
 -n, --negate
     Clean everything except specified patterns.
@@ -65,7 +66,7 @@ Options:
     Change line endings.
 
 Important note:
-    <patterns> should always be quoted.
+    Each pattern in <patterns> should always be quoted.
 
 """.format(appname=__appname__,
            appdescription=__appdescription__,
