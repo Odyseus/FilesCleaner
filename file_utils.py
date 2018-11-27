@@ -427,6 +427,22 @@ def custom_copytree(src, dst, symlinks=True, ignored_patterns=None, ignore_dangl
 
 
 def get_folder_size(dir_path):
+    """Get folder size
+
+    Parameters
+    ----------
+    dir_path : str
+        Path to a directory.
+
+    Returns
+    -------
+    int
+        A directory size in bytes.
+
+    Note
+    ----
+    Based on: `Calculating a directory's size using Python? <https://stackoverflow.com/a/37367965>`__
+    """
     total = 0
 
     for entry in os.scandir(dir_path):
