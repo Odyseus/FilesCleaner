@@ -69,7 +69,7 @@ class CommandLineInterfaceSuper():
         Parameters
         ----------
         **kwargs
-            Description
+            See :any:`template_utils.system_executable_generation`
         """
         from . import template_utils
 
