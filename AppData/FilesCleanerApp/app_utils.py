@@ -110,17 +110,17 @@ class FilesCleaner(object):
         """
         i = 0
         errors = []
-        question = "\n{message} '{path}' \n{prompt} "
+        question = "\n**{message} '{path}' \n{prompt}** "
 
         for target in self.targets:
             if confirm:
                 answer = prompts.read_char(question.format(
                     message=self.messages[func.__name__][0],
                     path=target,
-                    prompt=Ansi.WARNING(
+                    prompt=Ansi.LIGHT_YELLOW(
                         # Clean string:
                         # "(Yes/No/Abort)?"
-                        "(\033[4mY\033[24mes/\033[4mN\033[24mo/\033[4mA\033[24mbort)?")
+                        "**(\033[4mY\033[24mes/\033[4mN\033[24mo/\033[4mA\033[24mbort)?**")
                 ))
 
                 if answer in {"y", "Y"}:  # i.e., Yes
@@ -141,15 +141,15 @@ class FilesCleaner(object):
                     errors.append(str(err))
 
         if i:
-            self.logger.info("%s %s items (%sK)" % (
+            self.logger.info("**%s %s items (%sK)**" % (
                 self.messages[func.__name__][1], i, int(round(self.cum_size / 1024.0, 0))
             ), date=False)
         else:
-            self.logger.info("No action taken", date=False)
+            self.logger.info("**No action taken**", date=False)
 
         if len(errors) > 0:
             for err in errors:
-                self.logger.error("The following errors were found:")
+                self.logger.error("**The following errors were found:**")
                 self.logger.error(err, date=False)
 
     @staticmethod
@@ -196,7 +196,7 @@ class FilesCleaner(object):
         action : str
             The action to perform.
         """
-        self.logger.info("Working inside directory:\n%s" % self._path, date=False)
+        self.logger.info("**Working inside directory:**\n%s" % self._path, date=False)
         func, matcher = self.actions[action]
 
         def show(path):
@@ -220,15 +220,15 @@ class FilesCleaner(object):
         results = self._walk(self._path, show)
 
         if results:
-            question = "{results} item(s) found. {message} {prompt} "
+            question = "**{results} item(s) found. {message} {prompt}** "
 
             answer = prompts.read_char(question.format(
                 results=len(results),
                 message=self.messages[func.__name__][0],
-                prompt=Ansi.WARNING(
+                prompt=Ansi.LIGHT_YELLOW(
                     # Clean string:
                     # "(Yes/No/Confirm)?"
-                    "(\033[4mY\033[24mes/\033[4mN\033[24mo/\033[4mC\033[24monfirm)?")
+                    "**(\033[4mY\033[24mes/\033[4mN\033[24mo/\033[4mC\033[24monfirm)?**")
             ))
             self.targets = results
 
@@ -237,9 +237,9 @@ class FilesCleaner(object):
             elif answer in {"c", "C"}:
                 self._apply(func, confirm=True)
             else:
-                self.logger.warning("Action cancelled.", date=False)
+                self.logger.warning("**Action cancelled.**", date=False)
         else:
-            self.logger.info("No results.", date=False)
+            self.logger.info("**No results.**", date=False)
 
     def _walk(self, path, func):
         """Walk path recursively collecting results of function application.
@@ -278,7 +278,7 @@ class FilesCleaner(object):
                     results.append(obj)
                     self.cum_size += os.path.getsize(obj)
 
-                    self.logger.info("%s %s" %
+                    self.logger.info("**%s** %s" %
                                      (prefix, os.path.relpath(obj, self._path)), date=False)
 
         for root, dirs, files in os.walk(path):
