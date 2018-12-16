@@ -107,7 +107,7 @@ class CommandLineInterface(cli_utils.CommandLineInterfaceSuper):
         self.a = docopt_args
         self._cli_header_blacklist = [self.a["--manual"]]
 
-        super().__init__(__appname__, "UserData/logs")
+        super().__init__(__appname__)
 
         if not self.a["generate"] and not self.a["system_executable"] \
                 and not self.a["--path"] and not self.a["--manual"]:
@@ -128,15 +128,15 @@ class CommandLineInterface(cli_utils.CommandLineInterfaceSuper):
                                                   negate=self.a["--negate"],
                                                   logger=self.logger)
             if self.a["del"]:
-                self.logger.info("Deleting files...")
+                self.logger.info("**Deleting files...**")
                 self.action = self.delete
 
             if self.a["edit"]:
-                self.logger.info("Cleaning files...")
+                self.logger.info("**Cleaning files...**")
                 self.action = self.edit
         elif self.a["generate"]:
             if self.a["system_executable"]:
-                self.logger.info("System executable generation...")
+                self.logger.info("**System executable generation...**")
                 self.action = self.system_executable_generation
 
     def run(self):
