@@ -3,7 +3,7 @@
 __status__ = "Stable"
 __appname__ = "Files Cleaner"
 __appdescription__ = "CLI utility to delete/clean files from a folder based on a pattern of file names on GNU/Linux."
-__version__ = "2020-02-14 03:47:21.874"
+__version__ = "2020-02-19 12:00:13.464"
 
 
 if __name__ == "__main__":
